@@ -15,21 +15,21 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { TextInput } from "react-native-gesture-handler";
-
-const userId = "67ebfd10e60b708a02ff57a3";
-
+import { useTranslation } from "react-i18next";
 export default function GroupSelectionScreen({ navigation }) {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const { token, user, logout } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchGroups = async () => {
       try {
         const res = await fetch(
-          `http://192.168.50.68:3000/users/${userId}/groups`
+          `http://192.168.50.68:3000/users/${user._id}/groups`
         );
         const groupData = await res.json();
         console.log(groupData);
@@ -85,7 +85,7 @@ export default function GroupSelectionScreen({ navigation }) {
         },
         body: JSON.stringify({
           name: newGroupName.trim(),
-          leaderId: userId,
+          leaderId: user._id,
         }),
       });
 
@@ -157,7 +157,7 @@ export default function GroupSelectionScreen({ navigation }) {
             <Icon name="arrow-left" size={wp("5%")} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerText}>
-            {selectedGroup ? selectedGroup.name : "Select Group"}
+            {selectedGroup ? selectedGroup.name : t("select_group")}
           </Text>
         </View>
         <FlatList
@@ -175,7 +175,7 @@ export default function GroupSelectionScreen({ navigation }) {
               })
             }
           >
-            <Text style={styles.enterButtonText}>Enter Task Board</Text>
+            <Text style={styles.enterButtonText}>{t("enter_task_board")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -190,12 +190,12 @@ export default function GroupSelectionScreen({ navigation }) {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create new Group</Text>
+            <Text style={styles.modalTitle}>{t("create_new_group")}</Text>
             <TextInput
               style={styles.modalInput}
               value={newGroupName}
               onChangeText={setNewGroupName}
-              placeholder="Input Group Name"
+              placeholder={t("input_group_name")}
               placeholderTextColor="#72767d"
               maxLength={30}
             />
@@ -207,13 +207,13 @@ export default function GroupSelectionScreen({ navigation }) {
                   setModalVisible(false);
                 }}
               >
-                <Text style={styles.modalButtonText}>Cancel</Text>
+                <Text style={styles.modalButtonText}>{t("cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.createButton]}
                 onPress={handleCreateGroupSubmit}
               >
-                <Text style={styles.modalButtonText}>Create</Text>
+                <Text style={styles.modalButtonText}>{t("create")}</Text>
               </TouchableOpacity>
             </View>
           </View>

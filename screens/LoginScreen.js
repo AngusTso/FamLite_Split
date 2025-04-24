@@ -12,11 +12,14 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
+  const { t } = useTranslation();
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields");
@@ -29,10 +32,10 @@ export default function LoginScreen({ navigation }) {
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login To Famlite</Text>
+      <Text style={styles.title}>{t("login_title")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="email"
+        placeholder={t("email")}
         placeholderTextColor="#72767d"
         value={email}
         onChangeText={setEmail}
@@ -41,17 +44,17 @@ export default function LoginScreen({ navigation }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="password"
+        placeholder={t("password")}
         placeholderTextColor="#72767d"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>{t("login")}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate("RegisterScreen")}>
-        <Text style={styles.link}>Don't have an account yet? Register</Text>
+        <Text style={styles.link}>{t("register_link")}</Text>
       </TouchableOpacity>
     </View>
   );

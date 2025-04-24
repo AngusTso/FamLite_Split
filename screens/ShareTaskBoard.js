@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
+  Alert,
 } from "react-native";
 import TaskBlock from "../components/TaskBlock";
 import { SocketContext } from "../contexts/SocketContext";
@@ -20,11 +21,11 @@ import {
 } from "react-native-responsive-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../contexts/AuthContext";
-const userId = "67ebfd10e60b708a02ff57a3";
+import { useTranslation } from "react-i18next";
 
 export default function ShareTaskBoard({ navigation, route }) {
   const { groupId } = route.params || { groupId: "67ebed2ae60b708a02ff57a2" };
-  const { token } = useAuth();
+  const { token, user, logout } = useAuth();
 
   //Task creation related state
   const [taskName, setTaskName] = useState("");
@@ -38,6 +39,8 @@ export default function ShareTaskBoard({ navigation, route }) {
   const [members, setMembers] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const { t } = useTranslation();
+  const [groupName, setGroupName] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,22 +104,26 @@ export default function ShareTaskBoard({ navigation, route }) {
       console.log(taskName);
       const res = await fetch("http://192.168.50.68:3000/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           taskName: taskName,
           description: description || "",
           dueDate: dueDate ? dueDate.toISOString() : null,
           groupId: groupId,
-          createdBy: userId,
+          createdBy: user._id,
           assignedTo: assignedTo || null,
         }),
       });
-      const newTask = await res.json();
+      if (!res.ok) throw new Error("Task creation Failed ");
       setTaskName("");
       setDescription("");
       setDueDate(null);
       setAssignedTo("");
       setModalVisible(false);
+      Alert.alert("Success", "Task Created");
     } catch (e) {
       console.error(e);
     }
@@ -126,6 +133,31 @@ export default function ShareTaskBoard({ navigation, route }) {
     setTasklist((prev) =>
       prev.map((task) => (task._id === updatedTask._id ? updatedTask : task))
     );
+  };
+
+  const handleShuffleTasks = debounce(async () => {
+    try {
+      const res = await fetch("http://192.168.50.68:3000/tasks/shuffle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ groupId }),
+      });
+      if (!res.ok) throw new Error("Shuffle failed");
+      const updatedTask = await res.json();
+      setTasklist(updatedTask);
+      Alert.alert("Success", "Tasks Shuffled");
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Shuffle failed !! Try again later");
+    }
+  }, 3000);
+
+  const handleLogout = async () => {
+    await logout();
+    navigation.replace("LoginScreen");
   };
 
   return (
@@ -142,9 +174,16 @@ export default function ShareTaskBoard({ navigation, route }) {
           >
             <Icon name="arrow-left" size={wp("5%")} color="#000" />
           </TouchableOpacity>
+          <Text style={styles.headerText}>{groupName}</Text>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>{t("logout")}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.controls}>
           <View style={styles.toggleViewMode}>
             <Text style={styles.viewMode}>
-              {overviewMode ? "Overview" : "Member View"}
+              {overviewMode ? t("overview") : t("member_view")}
             </Text>
             <TouchableOpacity
               style={styles.toggleButton}
@@ -153,11 +192,15 @@ export default function ShareTaskBoard({ navigation, route }) {
               <Icon name="arrow-right" size={wp("5%")} color="#fff" />
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={styles.shuffleButton}
+            onPress={handleShuffleTasks}
+          >
+            <Icon name="random" size={wp("5%")} color="#fff" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.taskBoard}>
-          <Text style={styles.taskBoardText}>Shared Task Board!</Text>
-        </View>
+        <View style={styles.taskBoard}></View>
         <FlatList
           style={styles.tasklist}
           data={tasklist}
@@ -175,7 +218,7 @@ export default function ShareTaskBoard({ navigation, route }) {
             style={styles.input}
             value={taskName}
             onChangeText={setTaskName}
-            placeholder="Enter Task"
+            placeholder={t("enter_task")}
           />
           <TouchableOpacity
             style={styles.arrowButton}
@@ -200,13 +243,13 @@ export default function ShareTaskBoard({ navigation, route }) {
                   style={styles.modalInput}
                   value={taskName}
                   onChangeText={setTaskName}
-                  placeholder="Task Name"
+                  placeholder={t("task_name")}
                 />
                 <TextInput
                   style={styles.modalInput}
                   value={description}
                   onChangeText={setDescription}
-                  placeholder="Description (optional)"
+                  placeholder={t("description")}
                   multiline
                 />
                 <TouchableOpacity
@@ -214,7 +257,7 @@ export default function ShareTaskBoard({ navigation, route }) {
                   onPress={() => setShowDatePicker(true)}
                 >
                   <Text style={styles.dateButtonText}>
-                    {dueDate ? dueDate.toLocaleString() : "Select deadline"}
+                    {dueDate ? dueDate.toLocaleString() : t("select_deadline")}
                   </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
@@ -234,13 +277,15 @@ export default function ShareTaskBoard({ navigation, route }) {
                     style={styles.modalButton}
                     onPress={() => setModalVisible(false)}
                   >
-                    <Text style={styles.modalButtonText}>Cancel</Text>
+                    <Text style={styles.modalButtonText}>{t("cancel")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.modalButton}
                     onPress={createTask}
                   >
-                    <Text style={styles.modalButtonText}>Create Task</Text>
+                    <Text style={styles.modalButtonText}>
+                      {t("create_task")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -272,10 +317,32 @@ const styles = StyleSheet.create({
     marginTop: hp("2%"),
     marginBottom: hp("1%"),
   },
+  headerText: {
+    fontSize: wp("5%"),
+    fontWeight: "bold",
+    color: "#333",
+  },
+  logoutButton: {
+    backgroundColor: "#ff4d4d",
+    padding: wp("2%"),
+    borderRadius: 5,
+  },
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: wp("4%"),
+  },
   backButton: {
     padding: wp("2%"),
     borderRadius: 5,
     marginLeft: wp("1%"),
+  },
+  controls: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: wp("5%"),
+    marginBottom: hp("2%"),
   },
   toggleViewMode: {
     flexDirection: "row",
@@ -298,7 +365,18 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: wp("2%"),
   },
-
+  shuffleButton: {
+    flexDirection: "row",
+    backgroundColor: "#5865f2",
+    padding: wp("2%"),
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  shuffleButtonText: {
+    color: "#fff",
+    fontSize: wp("4%"),
+    marginLeft: wp("2%"),
+  },
   //Task Board related
   taskBoard: {
     marginVertical: hp("3%"),

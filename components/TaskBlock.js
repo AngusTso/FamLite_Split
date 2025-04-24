@@ -15,6 +15,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { useTranslation } from "react-i18next";
 
 export default function TaskBlock({ task, members, onUpdate }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,6 +27,8 @@ export default function TaskBlock({ task, members, onUpdate }) {
   );
   const [assignedTo, setAssignedTo] = useState(task.assignedTo || "");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const { token } = useAuth();
+  const { t } = useTranslation();
 
   const handleTaskUpdate = async () => {
     try {
@@ -33,6 +36,7 @@ export default function TaskBlock({ task, members, onUpdate }) {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           taskName,
@@ -47,7 +51,7 @@ export default function TaskBlock({ task, members, onUpdate }) {
       onUpdate(updatedTask);
       setModalVisible(false);
       setIsEditing(false);
-      alert("Updated Task");
+      alert(t("updated_task"));
     } catch (e) {
       console.error("Task updated Failed : ", e);
     }
@@ -114,7 +118,7 @@ export default function TaskBlock({ task, members, onUpdate }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {isEditing ? "Edit Task" : "Task Info"}
+              {isEditing ? t("edit_task") : t("task_info")}
             </Text>
             {isEditing ? (
               <>
@@ -122,20 +126,22 @@ export default function TaskBlock({ task, members, onUpdate }) {
                   style={styles.modalInput}
                   value={taskName}
                   onChangeText={setTaskName}
-                  placeholder="Task Name"
+                  placeholder={t("task_name")}
                 />
                 <TextInput
                   style={styles.modalInput}
                   value={description}
                   onChangeText={setDescription}
-                  placeholder="Description"
+                  placeholder={t("description")}
                 />
                 <TouchableOpacity
                   style={styles.dateButton}
                   onPress={() => setShowDatePicker(true)}
                 >
                   <Text style={styles.dateButtonText}>
-                    {dueDate ? dueDate.toLocaleDateString() : "Select DueDate"}
+                    {dueDate
+                      ? dueDate.toLocaleDateString()
+                      : t("select_deadline")}
                   </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
@@ -157,34 +163,34 @@ export default function TaskBlock({ task, members, onUpdate }) {
                   }))}
                   style={pickerSelectStyles}
                   value={assignedTo}
-                  placeholder={{ label: "Select a member", value: null }}
+                  placeholder={{ label: t("select_a_member"), value: null }}
                 />
               </>
             ) : (
               <>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Task Name: </Text>
+                  <Text style={styles.detailLabel}>{t("task_name")}: </Text>
                   <Text style={styles.detailText}>{task.taskName}</Text>
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Description: </Text>
+                  <Text style={styles.detailLabel}>{t("description")}: </Text>
                   <Text style={styles.detailText}>
                     {task.description || "No Description"}
                   </Text>
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Due Date: </Text>
+                  <Text style={styles.detailLabel}>{t("deadline")}: </Text>
                   <Text style={styles.detailText}>
                     {task.dueDate
                       ? new Date(task.dueDate).toLocaleDateString()
-                      : "No due date"}
+                      : t("no_deadline")}
                   </Text>
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Assigned To: </Text>
+                  <Text style={styles.detailLabel}>{t("assigned_to")}: </Text>
                   <Text style={styles.detailText}>
                     {members.find((m) => m._id === task.assignedTo)?.name ||
                       "Not assigned"}
@@ -192,15 +198,15 @@ export default function TaskBlock({ task, members, onUpdate }) {
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Created By: </Text>
+                  <Text style={styles.detailLabel}>{t("created_by")}: </Text>
                   <Text style={styles.detailText}>
                     {members.find((m) => m._id === task.createdBy)?.name ||
-                      "Not assigned"}
+                      t("not_applicable")}
                   </Text>
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Created At: </Text>
+                  <Text style={styles.detailLabel}>{t("created_at")}: </Text>
                   <Text style={styles.detailText}>
                     {new Date(task.createdAt).toLocaleString()}
                   </Text>
@@ -216,14 +222,14 @@ export default function TaskBlock({ task, members, onUpdate }) {
                   setIsEditing(false);
                 }}
               >
-                <Text style={styles.modalButtonText}>Cancel</Text>
+                <Text style={styles.modalButtonText}>{t("cancel")}</Text>
               </TouchableOpacity>
               {isEditing && (
                 <TouchableOpacity
                   style={styles.modalButton}
                   onPress={handleTaskUpdate}
                 >
-                  <Text style={styles.modalButtonText}>Save</Text>
+                  <Text style={styles.modalButtonText}>{t("save")}</Text>
                 </TouchableOpacity>
               )}
             </View>
