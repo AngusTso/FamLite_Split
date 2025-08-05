@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: wp("4%"),
     fontWeight: "bold",
+    textAlign: "center",
   },
   link: {
     color: "#5865f2",

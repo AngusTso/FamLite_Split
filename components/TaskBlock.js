@@ -16,8 +16,10 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
 
-export default function TaskBlock({ task, members, onUpdate }) {
+export default function TaskBlock({ task, members, onUpdate, groupId }) {
+  console.log(members);
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [taskName, setTaskName] = useState(task.taskName);
@@ -36,9 +38,10 @@ export default function TaskBlock({ task, members, onUpdate }) {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          groupId,
           taskName,
           description,
           dueDate: dueDate ? dueDate.toISOString() : null,
@@ -60,9 +63,12 @@ export default function TaskBlock({ task, members, onUpdate }) {
   const toggleComplete = async () => {
     try {
       const res = await fetch(`http://192.168.50.68:3000/tasks/${task._id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isCompleted: !task.isCompleted }),
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ groupId, isCompleted: !task.isCompleted }),
       });
 
       if (!res.ok) throw new Error("Failed to update task");
@@ -73,12 +79,45 @@ export default function TaskBlock({ task, members, onUpdate }) {
     }
   };
 
+  const handleDelete = async () => {
+    Alert.alert(
+      t("confirm_delete"),
+      `${t("delete_task_confirmation")} "${task.taskName}"?`,
+      [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await fetch(
+                `http://192.168.50.68:3000/tasks/${task._id}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+              if (!res.ok) throw new Error("Failed to delete task");
+              Alert.alert(t("success"), t("task_deleted"));
+            } catch (e) {
+              console.error("Task deletion failed: ", e);
+              Alert.alert("Error", t("failed_to_delete_task"));
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.taskRow}>
         <TouchableOpacity onPress={toggleComplete} style={styles.checkbox}>
           <Icon
-            name={task.isCompleted ? "check-sqaure" : "square"}
+            name={task.isCompleted ? "check-square-o" : "square-o"}
             size={wp("5%")}
             color="#5865f2"
           />
@@ -87,6 +126,9 @@ export default function TaskBlock({ task, members, onUpdate }) {
           {task.taskName}
         </Text>
         <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+            <Icon name="trash" size={wp("5%")} color="#fff" />
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.expandButton}
             onPress={() => {
@@ -281,6 +323,12 @@ const styles = StyleSheet.create({
     padding: wp("2%"),
     borderRadius: 5,
     marginRight: wp("2%"),
+  },
+  deleteButton: {
+    backgroundColor: "#ff4d4d",
+    padding: wp("2%"),
+    marginRight: wp("2%"),
+    borderRadius: 5,
   },
   editButton: {
     backgroundColor: "#5865f2",

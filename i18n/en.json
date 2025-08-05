@@ -1,10 +1,12 @@
 {
-  "login_title": "Login to Split",
-  "email": "Email",
+  "login_title": "Enter Split",
+  "email": "email",
   "password": "password",
+  "no_groups_available": "No Group avaliable",
+  "create_group_prompt": "Create /Join a Group",
   "login": "login",
   "register_link": "Don't have an account yet? Register",
-  "register_title": "Register for Split",
+  "register_title": "Join Split Today",
   "register": "Register",
   "username": "Username",
   "login_link": "Already have an account? Login",
@@ -34,5 +36,11 @@
   "created_by": "Created By",
   "not_applicable": "Not Applicable",
   "created_at": "Created At",
-  "save": "Save"
+  "save": "Save",
+  "Your_view": "Your View",
+  "completed_tasks": "Completed Tasks",
+  "confirm_delete": "Delete Confirmation",
+  "delete_task_confirmation": "Are you sure you want to delete",
+  "task_deleted": "Task deleted successfully",
+  "failed_to_delete_task": "Failed to delete Task"
 }

@@ -13,6 +13,7 @@ import {
 } from "react-native-responsive-screen";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+
 export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -29,12 +30,13 @@ export default function RegisterScreen({ navigation }) {
       Alert.alert("Error", "password must be at least 6 characters");
       return;
     }
-
+    console.log(username, email, password);
     const success = await register(username, email, password);
     if (success) {
       navigation.replace("GroupSelectionScreen");
     }
   };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t("register_title")}</Text>
